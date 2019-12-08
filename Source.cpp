@@ -56,7 +56,7 @@ static int destructNoise(lua_State* L)
 static int initNoise(lua_State* L)
 {
 	GNoise* n = new GNoise();
-	g_pushInstance(L, "Polygon", n->object());
+	g_pushInstance(L, "Noise", n->object());
 
 	luaL_rawgetptr(L, LUA_REGISTRYINDEX, &keyWeak);
 	lua_pushvalue(L, -2);
