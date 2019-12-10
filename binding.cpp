@@ -594,13 +594,12 @@ static int generateArray(lua_State* L)
     if (!lua_isnoneornil(L,2))
         assertIsPositiveNumber(L, 2, "Array size");
     int size = lua_tointeger(L, 2);
-    double scale = luaL_optnumber(L, 3, 1);
-    double zoff = luaL_optnumber(L, 4, 0);
+    double zoff = luaL_optnumber(L, 3, 0);
 
     lua_createtable(L, 0, size);
     for (int i = 0; i < size; i++)
     {
-        FN_DECIMAL v = n->_noise(i * scale, zoff);
+        FN_DECIMAL v = n->_noise(i, zoff);
         lua_pushnumber(L, i+1);
         lua_pushnumber(L, v);
         lua_rawset(L, -3);
@@ -626,7 +625,6 @@ static int generateTexture(lua_State* L)
     bool filtering = lua_toboolean(L, 4);
     // get optional z offset parameter
     double zoff = luaL_optnumber(L, 5, 0);
-    // check if last parameter is table
 
     unsigned char *data=new unsigned char[w*h*4];
     unsigned char *ptr=data;
@@ -634,8 +632,8 @@ static int generateTexture(lua_State* L)
     for (int y=0;y<h;y++)
         for (int x=0;x<w;x++)
         {
-            float noise=n->_noise(x, y, zoff);
-            //Convert [-1,1] into [0,255]
+            float noise=n->_noise(x, y, zoff); 
+            //Convert [-1,1] into [0,255] // TODO: special case for distance return type?
             unsigned char lum=(unsigned char)((noise+1)*255/2);
             *ptr++=lum; //R
             *ptr++=lum; //G
