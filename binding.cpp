@@ -656,6 +656,57 @@ static int generateTexture(lua_State* L)
     return 1;
 }
 
+static int generateTileableTexture(lua_State* L)
+{
+    GNoise *n = getNoiseInstance(L, 1);
+
+    // check if texture size is > 0
+    assertIsPositiveNumber(L, 2, "Texture width");
+    assertIsPositiveNumber(L, 3, "Texture height");
+    // get texture size
+    int w = luaL_checkinteger(L, 2);
+    int h = luaL_checkinteger(L, 3);
+    // get optional filtering parameter
+    bool filtering = lua_toboolean(L, 4);
+
+    unsigned char *data=new unsigned char[w*h*4];
+    unsigned char *ptr=data;
+
+    double pi2 = 2*M_PI;
+    for (int y=0;y<h;y++)
+        for (int x=0;x<w;x++)
+        {
+            double s = (double)x / (double)w;
+            double t = (double)y / (double)h;
+
+            double nx=cos(s*pi2)*-100.0/pi2;
+            double ny=cos(t*pi2)*-100.0/pi2;
+            double nz=-1.0+sin(s*pi2)*-100.0/pi2;
+            double nw=-1.0+sin(t*pi2)*-100.0/pi2;
+            double noise = n->getSimplex(nx,ny,nz,nw);
+
+            unsigned char lum=(unsigned char)((noise+1)*255/2);
+            *ptr++=lum; //R
+            *ptr++=lum; //G
+            *ptr++=lum; //B
+            *ptr++=255; //A
+        }
+    // Use our data array
+    lua_getglobal(L, "Texture");
+    lua_getfield(L, -1, "new");
+    lua_pushlstring(L,(char *)data,4*w*h);
+    lua_pushinteger(L,w);
+    lua_pushinteger(L,h);
+    lua_pushboolean(L,filtering);
+    // TODO: add "optional" table to texture lua_push
+    lua_call(L,4,1);
+    // Newly created texture is on stack already, just return it
+    //Delete our data array
+    delete data;
+    lua_remove(L, -2);
+    return 1;
+}
+
 static int reset(lua_State* L)
 {
     GNoise *noise = getNoiseInstance(L, 1);
@@ -681,7 +732,8 @@ static int loader(lua_State* L)
     const luaL_Reg functionlist[] = {
         {"new", initNoise},
         {"reset", reset},
-
+        
+        {"generateTileableTexture", generateTileableTexture},
         {"generateTexture", generateTexture},
         {"generateArray", generateArray},
 
