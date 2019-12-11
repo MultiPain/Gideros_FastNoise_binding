@@ -733,7 +733,7 @@ static int loader(lua_State* L)
     lua_getglobal(L, "Noise");
 
     lua_pushnumber(L, FastNoise::FBM);
-    lua_setfield(L, -2, "F_B_M");
+    lua_setfield(L, -2, "FBM");
 
     lua_pushnumber(L, FastNoise::RigidMulti);
     lua_setfield(L, -2, "RIGID_MULTI");
