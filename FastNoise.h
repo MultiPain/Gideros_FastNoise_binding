@@ -32,7 +32,7 @@
 #define FASTNOISE_H
 
 // Uncomment the line below to use doubles throughout FastNoise instead of floats
-#define FN_USE_DOUBLES
+//#define FN_USE_DOUBLES
 
 #define FN_CELLULAR_INDEX_MAX 3
 
@@ -92,7 +92,7 @@ public:
 
 	// Returns octave count for all fractal noise types
 	int GetFractalOctaves() const { return m_octaves; }
-
+	
 	// Sets octave lacunarity for all fractal noise types
 	// Default: 2.0
 	void SetFractalLacunarity(FN_DECIMAL lacunarity) { m_lacunarity = lacunarity; }
@@ -160,29 +160,6 @@ public:
 
 	// Returns the maximum warp distance from original location when using GradientPerturb{Fractal}(...)
 	FN_DECIMAL GetGradientPerturbAmp() const { return m_gradientPerturbAmp; }
-
-	//1D
-	FN_DECIMAL GetValue(FN_DECIMAL x) const;
-	FN_DECIMAL GetValueFractal(FN_DECIMAL x) const;
-
-	FN_DECIMAL GetPerlin(FN_DECIMAL x) const;
-	FN_DECIMAL GetPerlinFractal(FN_DECIMAL x) const;
-
-	FN_DECIMAL GetSimplex(FN_DECIMAL x) const;
-	FN_DECIMAL GetSimplexFractal(FN_DECIMAL x) const;
-
-	FN_DECIMAL GetCellular(FN_DECIMAL x) const;
-
-	FN_DECIMAL GetWhiteNoise(FN_DECIMAL x) const;
-	FN_DECIMAL GetWhiteNoiseInt(int x) const;
-
-	FN_DECIMAL GetCubic(FN_DECIMAL x) const;
-	FN_DECIMAL GetCubicFractal(FN_DECIMAL x) const;
-
-	FN_DECIMAL GetNoise(FN_DECIMAL x) const;
-
-	void GradientPerturb(FN_DECIMAL& x) const;
-	void GradientPerturbFractal(FN_DECIMAL& x) const;
 
 	//2D
 	FN_DECIMAL GetValue(FN_DECIMAL x, FN_DECIMAL y) const;
@@ -261,32 +238,6 @@ private:
 	FN_DECIMAL m_gradientPerturbAmp = FN_DECIMAL(1);
 
 	void CalculateFractalBounding();
-	//1D
-	FN_DECIMAL SingleValueFractalFBM(FN_DECIMAL x) const;
-	FN_DECIMAL SingleValueFractalBillow(FN_DECIMAL x) const;
-	FN_DECIMAL SingleValueFractalRigidMulti(FN_DECIMAL x) const;
-	FN_DECIMAL SingleValue(unsigned char offset, FN_DECIMAL x) const;
-
-	FN_DECIMAL SinglePerlinFractalFBM(FN_DECIMAL x) const;
-	FN_DECIMAL SinglePerlinFractalBillow(FN_DECIMAL x) const;
-	FN_DECIMAL SinglePerlinFractalRigidMulti(FN_DECIMAL x) const;
-	FN_DECIMAL SinglePerlin(unsigned char offset, FN_DECIMAL x) const;
-
-	FN_DECIMAL SingleSimplexFractalFBM(FN_DECIMAL x) const;
-	FN_DECIMAL SingleSimplexFractalBillow(FN_DECIMAL x) const;
-	FN_DECIMAL SingleSimplexFractalRigidMulti(FN_DECIMAL x) const;
-	FN_DECIMAL SingleSimplexFractalBlend(FN_DECIMAL x) const;
-	FN_DECIMAL SingleSimplex(unsigned char offset, FN_DECIMAL x) const;
-
-	FN_DECIMAL SingleCubicFractalFBM(FN_DECIMAL x) const;
-	FN_DECIMAL SingleCubicFractalBillow(FN_DECIMAL x) const;
-	FN_DECIMAL SingleCubicFractalRigidMulti(FN_DECIMAL x) const;
-	FN_DECIMAL SingleCubic(unsigned char offset, FN_DECIMAL x) const;
-
-	FN_DECIMAL SingleCellular(FN_DECIMAL x) const;
-	FN_DECIMAL SingleCellular2Edge(FN_DECIMAL x) const;
-
-	void SingleGradientPerturb(unsigned char offset, FN_DECIMAL warpAmp, FN_DECIMAL frequency, FN_DECIMAL& x) const;
 
 	//2D
 	FN_DECIMAL SingleValueFractalFBM(FN_DECIMAL x, FN_DECIMAL y) const;
@@ -344,19 +295,15 @@ private:
 	//4D
 	FN_DECIMAL SingleSimplex(unsigned char offset, FN_DECIMAL x, FN_DECIMAL y, FN_DECIMAL z, FN_DECIMAL w) const;
 
-	inline unsigned char Index1D_12(unsigned char offset, int x) const;
 	inline unsigned char Index2D_12(unsigned char offset, int x, int y) const;
 	inline unsigned char Index3D_12(unsigned char offset, int x, int y, int z) const;
 	inline unsigned char Index4D_32(unsigned char offset, int x, int y, int z, int w) const;
-	inline unsigned char Index1D_256(unsigned char offset, int x) const;
 	inline unsigned char Index2D_256(unsigned char offset, int x, int y) const;
 	inline unsigned char Index3D_256(unsigned char offset, int x, int y, int z) const;
 	inline unsigned char Index4D_256(unsigned char offset, int x, int y, int z, int w) const;
 
-	inline FN_DECIMAL ValCoord1DFast(unsigned char offset, int x) const;
 	inline FN_DECIMAL ValCoord2DFast(unsigned char offset, int x, int y) const;
 	inline FN_DECIMAL ValCoord3DFast(unsigned char offset, int x, int y, int z) const;
-	inline FN_DECIMAL GradCoord1D(unsigned char offset, int x, FN_DECIMAL xd) const;
 	inline FN_DECIMAL GradCoord2D(unsigned char offset, int x, int y, FN_DECIMAL xd, FN_DECIMAL yd) const;
 	inline FN_DECIMAL GradCoord3D(unsigned char offset, int x, int y, int z, FN_DECIMAL xd, FN_DECIMAL yd, FN_DECIMAL zd) const;
 	inline FN_DECIMAL GradCoord4D(unsigned char offset, int x, int y, int z, int w, FN_DECIMAL xd, FN_DECIMAL yd, FN_DECIMAL zd, FN_DECIMAL wd) const;
