@@ -616,12 +616,13 @@ static int generateArray(lua_State* L)
 
     assertIsPositiveNumber(L, 2, "Array size");
     int size = lua_tointeger(L, 2);
-    double yoff = luaL_optnumber(L, 3, 0);
+    double xoff = luaL_optnumber(L, 3, 0);
+    double yoff = luaL_optnumber(L, 4, 0);
 
     lua_createtable(L, 0, size);
     for (int i = 0; i < size; i++)
     {
-        FN_DECIMAL v = n->getNoise(i, yoff);
+        FN_DECIMAL v = n->getNoise(i+xoff, yoff);
         lua_pushnumber(L, i+1);
         lua_pushnumber(L, v);
         lua_rawset(L, -3);
@@ -679,13 +680,8 @@ static int generateTexture(lua_State* L)
     lua_pushboolean(L,filtering);
 
     // load options table
-    if (lua_istable(L, 5))
-    {
-        lua_pushvalue(L, 5);
-        lua_call(L,5,1);
-    }
-    else
-        lua_call(L,4,1);
+    lua_pushvalue(L, 5);
+    lua_call(L,5,1);
     // Newly created texture is on stack already, just return it
     //Delete our data array
     delete[] data;
@@ -754,13 +750,8 @@ static int generateTileableTexture(lua_State* L)
     // load options table
 
     // load options table
-    if (lua_istable(L, 5))
-    {
-        lua_pushvalue(L, 5);
-        lua_call(L,5,1);
-    }
-    else
-        lua_call(L,4,1);
+    lua_pushvalue(L, 5);
+    lua_call(L,5,1);
     // Newly created texture is on stack already, just return it
     //Delete our data array
     delete[] data;
