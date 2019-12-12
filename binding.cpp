@@ -720,10 +720,10 @@ static int generateTileableTexture(lua_State* L)
             double s = (double)x / (double)w;
             double t = (double)y / (double)h;
 
-            double nx=cos(s*pi2)*-100.0/pi2;
-            double ny=cos(t*pi2)*-100.0/pi2;
-            double nz=-1.0+sin(s*pi2)*-100.0/pi2;
-            double nw=-1.0+sin(t*pi2)*-100.0/pi2;
+            double nx=cos(s*pi2)*-w/pi2;
+            double ny=cos(t*pi2)*-h/pi2;
+            double nz=-1.0+sin(s*pi2)*-w/pi2;
+            double nw=-1.0+sin(t*pi2)*-h/pi2;
             double noise = n->getSimplex(nx + xoff, ny + yoff, nz + zoff,nw);
 
             noise=map(noise, min, max, 0, 1);
