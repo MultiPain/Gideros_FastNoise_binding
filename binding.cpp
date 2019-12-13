@@ -704,8 +704,13 @@ static int generateTexture(lua_State* L)
     lua_pushboolean(L,filtering);
 
     // load options table
-    lua_pushvalue(L, 5);
-    lua_call(L,5,1);
+    if (lua_istable(L, 5))
+    {
+        lua_pushvalue(L, 5);
+        lua_call(L,5,1);
+    }
+    else
+        lua_call(L,4,1);
     // Newly created texture is on stack already, just return it
     //Delete our data array
     delete[] data;
