@@ -67,30 +67,36 @@ static double map(double v, double minC, double maxC, double minD, double maxD)
 static unsigned char getColor(lua_State* L, int ind)
 {
     lua_rawgeti(L, -1, ind);
-    double cv = luaL_checknumber(L, -1);
+    int cv = luaL_checkinteger(L, -1);
     lua_pop(L, 1);
     return (unsigned char)cv;
 }
 
-static void loadNoiseParams(lua_State* L, int index, double &xoff, double &yoff, double &zoff, double &min, double &max )
+static void loadNoiseParams(lua_State* L, int index, double &xoff, double &yoff, double &zoff, double &woff, double &min, double &max, bool &tileable)
 {
     xoff = 0.0;
     yoff = 0.0;
     zoff = 0.0;
+    woff = 0.0;
     min = -1.0;
     max = 1.0;
+    tileable = false;
     if (lua_istable(L, index))
     {
         lua_getfield(L, index, "xoff");
-        if (!lua_isnil(L, -1)) xoff = luaL_checknumber(L, -1);
+        xoff = lua_tonumber(L, -1);
         lua_pop(L, 1);
 
         lua_getfield(L, index, "yoff");
-        if (!lua_isnil(L, -1)) yoff = luaL_checknumber(L, -1);
+        yoff = lua_tonumber(L, -1);
         lua_pop(L, 1);
 
         lua_getfield(L, index, "zoff");
-        if (!lua_isnil(L, -1)) zoff = luaL_checknumber(L, -1);
+        zoff = lua_tonumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, index, "woff");
+        woff = lua_tonumber(L, -1);
         lua_pop(L, 1);
 
         lua_getfield(L, index, "min");
@@ -99,6 +105,10 @@ static void loadNoiseParams(lua_State* L, int index, double &xoff, double &yoff,
 
         lua_getfield(L, index, "max");
         if (!lua_isnil(L, -1)) max = luaL_checknumber(L, -1);
+        lua_pop(L, 1);
+
+        lua_getfield(L, index, "tileable");
+        tileable = lua_toboolean(L, -1);
         lua_pop(L, 1);
     }
 }
@@ -610,6 +620,18 @@ static int whiteNoise4DInt(lua_State* L)
 //                      Additions
 //-------------------------------------------------------
 
+static double getTorusNoise(GNoise *n, int x, int y, int w, int h, double xoff, double yoff, double zoff, double woff)
+{
+    double s = (double)x / (double)w;
+    double t = (double)y / (double)h;
+    double pi2 = M_PI * 2;
+    double nx=cos(s*pi2)*-w/pi2;
+    double ny=cos(t*pi2)*-h/pi2;
+    double nz=-1.0+sin(s*pi2)*-w/pi2;
+    double nw=-1.0+sin(t*pi2)*-h/pi2;
+    return n->getSimplex(nx + xoff, ny + yoff, nz + zoff, nw + woff);
+}
+
 static int generateArray(lua_State* L)
 {
     GNoise *n = getNoiseInstance(L, 1);
@@ -644,9 +666,10 @@ static int generateTexture(lua_State* L)
     // get optional filtering parameter
     bool filtering = lua_toboolean(L, 4);
     // define optional noise parameters
-    double xoff,yoff,zoff,min,max;
+    double xoff,yoff,zoff,woff,min,max;
+    bool tileable;
     // get parameters
-    loadNoiseParams(L, 6, xoff, yoff, zoff, min, max);
+    loadNoiseParams(L, 6, xoff, yoff, zoff, woff, min, max, tileable);
 
     unsigned char *data=new unsigned char[w*h*4];
     unsigned char *ptr=data;
@@ -654,7 +677,8 @@ static int generateTexture(lua_State* L)
     for (int y=0;y<h;y++)
         for (int x=0;x<w;x++)
         {
-            float noise=map(n->getNoise(x + xoff, y + yoff, zoff), min, max, 0, 1);
+            double noise= tileable ? getTorusNoise(n, x, y, w, h, xoff, yoff, zoff, woff) : n->getNoise(x + xoff, y + yoff, zoff);
+            noise = map(noise, min, max, 0, 1);
             unsigned char lum=(unsigned char)(noise*255);
             Color clr = Color(lum,lum,lum,255);
 
@@ -678,76 +702,6 @@ static int generateTexture(lua_State* L)
     lua_pushinteger(L,w);
     lua_pushinteger(L,h);
     lua_pushboolean(L,filtering);
-
-    // load options table
-    lua_pushvalue(L, 5);
-    lua_call(L,5,1);
-    // Newly created texture is on stack already, just return it
-    //Delete our data array
-    delete[] data;
-    lua_remove(L, -2);
-    return 1;
-}
-
-static int generateTileableTexture(lua_State* L)
-{
-    GNoise *n = getNoiseInstance(L, 1);
-
-    // check if texture size is > 0
-    assertIsPositiveNumber(L, 2, "Texture width");
-    assertIsPositiveNumber(L, 3, "Texture height");
-    // get texture size
-    int w = luaL_checkinteger(L, 2);
-    int h = luaL_checkinteger(L, 3);
-    // get optional filtering parameter
-    bool filtering = lua_toboolean(L, 4);
-    // define optional noise parameters
-    double xoff,yoff,zoff,min,max;
-    // get optional noise parameters
-    loadNoiseParams(L, 6, xoff, yoff, zoff, min, max);
-
-    unsigned char *data=new unsigned char[w*h*4];
-    unsigned char *ptr=data;
-
-    double pi2 = 2*M_PI;
-    for (int y=0;y<h;y++)
-        for (int x=0;x<w;x++)
-        {
-            double s = (double)x / (double)w;
-            double t = (double)y / (double)h;
-
-            double nx=cos(s*pi2)*-w/pi2;
-            double ny=cos(t*pi2)*-h/pi2;
-            double nz=-1.0+sin(s*pi2)*-w/pi2;
-            double nw=-1.0+sin(t*pi2)*-h/pi2;
-            double noise = n->getSimplex(nx + xoff, ny + yoff, nz + zoff,nw);
-
-            noise=map(noise, min, max, 0, 1);
-
-            unsigned char lum=(unsigned char)(noise*255);
-            Color clr = Color(lum,lum,lum,255);
-
-            if (lua_istable(L, 6))
-            {
-                lua_getfield(L, 6, "colors");
-                if (lua_objlen(L, -1) > 0)
-                    clr = matchColor(L, noise);
-                lua_pop(L, 1);
-            }
-            *ptr++=clr.R;
-            *ptr++=clr.G;
-            *ptr++=clr.B;
-            *ptr++=clr.A;
-        }
-    // Use our data array
-    lua_getglobal(L, "Texture");
-    lua_getfield(L, -1, "new");
-    lua_pushlstring(L,(char *)data,4*w*h);
-    lua_pushinteger(L,w);
-    lua_pushinteger(L,h);
-    lua_pushboolean(L,filtering);
-
-    // load options table
 
     // load options table
     lua_pushvalue(L, 5);
@@ -786,7 +740,6 @@ static int loader(lua_State* L)
         {"reset", reset},
 
         {"generateTexture", generateTexture},
-        {"generateTileableTexture", generateTileableTexture},
         {"generateArray", generateArray},
 
         {"noise", noise},
@@ -932,4 +885,4 @@ static void g_deinitializePlugin(lua_State* L)
 
 }
 
-REGISTER_PLUGIN("FastNoise", "0.1a");
+REGISTER_PLUGIN("FastNoise", "1.0");
